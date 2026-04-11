@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Calculadora Hipotecaria UVA</title>
+<title>Calculadora Hipotecario UVA</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -21,6 +21,7 @@
     --accent2-light: #faece7;
     --green: #0f6e56;
     --green-light: #e1f5ee;
+    --green-border: #9FE1CB;
     --radius: 10px;
     --radius-sm: 6px;
   }
@@ -33,7 +34,7 @@
     padding: 2rem 1rem;
   }
 
-  .page { max-width: 860px; margin: 0 auto; }
+  .page { max-width: 900px; margin: 0 auto; }
 
   header { margin-bottom: 2rem; }
   header h1 {
@@ -128,9 +129,16 @@
     border-radius: var(--radius-sm);
     padding: 14px;
   }
+  .metric.highlight {
+    background: var(--green-light);
+    border: 1px solid var(--green-border);
+  }
   .metric .mlabel { font-size: 11px; color: var(--muted); font-weight: 500; margin-bottom: 5px; }
+  .metric.highlight .mlabel { color: var(--green); }
   .metric .mval { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+  .metric.highlight .mval { color: var(--green); }
   .metric .msub { font-size: 11px; color: var(--muted); margin-top: 3px; font-family: 'DM Mono', monospace; }
+  .metric.highlight .msub { color: var(--green); }
 
   .tabs { display: flex; gap: 2px; margin-bottom: 12px; }
   .tab {
@@ -184,10 +192,10 @@
     white-space: nowrap;
   }
   td:first-child { text-align: center; font-family: 'DM Sans', sans-serif; color: var(--muted); font-size: 12px; }
+  td.total-col { font-weight: 600; color: var(--accent); }
   tr:hover td { background: var(--accent-light); }
 
   .chart-wrap { height: 220px; position: relative; margin: 0.5rem 0; }
-
   .legend { display: flex; gap: 18px; font-size: 12px; color: var(--muted); margin-bottom: 10px; }
   .legend span { display: flex; align-items: center; gap: 5px; }
   .leg-dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
@@ -218,7 +226,6 @@
   @media (max-width: 600px) {
     .grid-2, .grid-3 { grid-template-columns: 1fr; }
     .metrics { grid-template-columns: 1fr 1fr; }
-    .metrics .metric:last-child { grid-column: span 2; }
     header h1 { font-size: 21px; }
   }
 </style>
@@ -273,7 +280,7 @@
 
     <hr class="divider">
     <p class="section-label">Condiciones del crédito</p>
-    <div class="grid-2">
+    <div class="grid-2" style="margin-bottom: 14px;">
       <div>
         <p style="font-size:12px;color:var(--muted);font-weight:500;margin-bottom:7px;">¿1° Vivienda? (IVA)</p>
         <div class="toggle-group">
@@ -287,6 +294,17 @@
           <button class="toggle-btn" id="btnCvsNo" onclick="setCVS('NO')">No aplica</button>
           <button class="toggle-btn active" id="btnCvsSi" onclick="setCVS('SI')">Sí (+1.5% mensual)</button>
         </div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom: 14px;">
+      <div class="field">
+        <label>Relación cuota/ingreso (%)</label>
+        <input type="number" id="relacionCuota" value="25" min="1" max="100" step="1">
+      </div>
+      <div class="field">
+        <label>Seguro de incendio (% anual sobre valor inmueble)</label>
+        <input type="number" id="seguroIncendio" value="0.012" min="0" step="0.0001">
       </div>
     </div>
 
@@ -313,7 +331,7 @@
         <table>
           <thead><tr>
             <th>Mes</th><th>Cuota capital</th><th>Cuota interés</th>
-            <th>IVA s/interés</th><th>Cuota servicio</th><th>Saldo deuda</th>
+            <th>IVA s/interés</th><th>Seg. incendio</th><th>Cuota total</th><th>Saldo deuda</th>
           </tr></thead>
           <tbody id="bodyUVA"></tbody>
         </table>
@@ -323,7 +341,7 @@
         <table>
           <thead><tr>
             <th>Mes</th><th>Cuota capital</th><th>Cuota interés</th>
-            <th>IVA s/interés</th><th>Cuota servicio</th><th>Saldo deuda</th>
+            <th>IVA s/interés</th><th>Seg. incendio</th><th>Cuota total</th><th>Saldo deuda</th>
           </tr></thead>
           <tbody id="bodyARS"></tbody>
         </table>
@@ -333,7 +351,7 @@
         <table>
           <thead><tr>
             <th>Mes</th><th>Cuota capital</th><th>Cuota interés</th>
-            <th>IVA s/interés</th><th>Cuota servicio</th><th>Saldo deuda</th>
+            <th>IVA s/interés</th><th>Seg. incendio</th><th>Cuota total</th><th>Saldo deuda</th>
           </tr></thead>
           <tbody id="bodyUSD"></tbody>
         </table>
@@ -343,9 +361,10 @@
         <div class="legend">
           <span><span class="leg-dot" style="background:#1a3a5c;"></span>Capital (ARS)</span>
           <span><span class="leg-dot" style="background:#c44a20;"></span>Interés (ARS)</span>
+          <span><span class="leg-dot" style="background:#0f6e56;"></span>Seg. incendio (ARS)</span>
         </div>
         <div class="chart-wrap">
-          <canvas id="myChart" role="img" aria-label="Composición de cuota mensual: capital vs interés en ARS"></canvas>
+          <canvas id="myChart" role="img" aria-label="Composición de cuota mensual: capital, interés y seguro de incendio en ARS"></canvas>
         </div>
       </div>
     </div>
@@ -380,13 +399,15 @@
   }
 
   function calcular() {
-    const valorInmueble = parseFloat(document.getElementById('valorInmueble').value);
-    const tnaInput = parseFloat(document.getElementById('tna').value) / 100;
-    const plazo = parseInt(document.getElementById('plazo').value);
-    const pctAnticipo = parseFloat(document.getElementById('anticipo').value) / 100;
-    const pctGastos = parseFloat(document.getElementById('gastos').value) / 100;
-    const valorUVA = parseFloat(document.getElementById('valorUVA').value);
-    const usdArs = parseFloat(document.getElementById('usdArs').value);
+    const valorInmueble  = parseFloat(document.getElementById('valorInmueble').value);
+    const tnaInput       = parseFloat(document.getElementById('tna').value) / 100;
+    const plazo          = parseInt(document.getElementById('plazo').value);
+    const pctAnticipo    = parseFloat(document.getElementById('anticipo').value) / 100;
+    const pctGastos      = parseFloat(document.getElementById('gastos').value) / 100;
+    const valorUVA       = parseFloat(document.getElementById('valorUVA').value);
+    const usdArs         = parseFloat(document.getElementById('usdArs').value);
+    const relacionCuota  = parseFloat(document.getElementById('relacionCuota').value) / 100;
+    const pctSeguro      = parseFloat(document.getElementById('seguroIncendio').value) / 100;
 
     const CVS = 0.015;
     const tem = ajusteCVS === 'SI'
@@ -395,17 +416,23 @@
 
     const hipotecaUSD = valorInmueble * (1 - pctAnticipo);
     const hipotecaARS = hipotecaUSD * usdArs;
-    const capitalUVA = Math.ceil(hipotecaARS / valorUVA);
+    const capitalUVA  = Math.ceil(hipotecaARS / valorUVA);
     const cuotaPuraUVA = capitalUVA / ((1 - Math.pow(1 + tem, -plazo)) / tem);
+
+    // Seguro de incendio mensual fijo sobre valor del inmueble
+    const segMensualUSD = (valorInmueble * pctSeguro) / 12;
+    const segMensualARS = segMensualUSD * usdArs;
+    const segMensualUVA = segMensualARS / valorUVA;
 
     const rows = [];
     let saldoUVA = capitalUVA;
 
     for (let i = 1; i <= plazo; i++) {
-      const interesUVA = saldoUVA * tnaInput / 12.1666667;
+      const interesUVA  = saldoUVA * tnaInput / 12.1666667;
       const capitalUVAi = cuotaPuraUVA - interesUVA;
-      const ivaUVA = primeraVivienda === 'NO' ? interesUVA * 0.21 : 0;
-      const servUVA = cuotaPuraUVA + ivaUVA;
+      const ivaUVA      = primeraVivienda === 'NO' ? interesUVA * 0.21 : 0;
+      const servUVA     = cuotaPuraUVA + ivaUVA;
+      const totalUVA    = servUVA + segMensualUVA;
       saldoUVA = Math.max(0, saldoUVA - capitalUVAi);
 
       const toARS = x => x * valorUVA;
@@ -413,15 +440,17 @@
 
       rows.push({
         mes: i,
-        uva: { cap: capitalUVAi, int: interesUVA, iva: ivaUVA, serv: servUVA, saldo: saldoUVA },
-        ars: { cap: toARS(capitalUVAi), int: toARS(interesUVA), iva: toARS(ivaUVA), serv: toARS(servUVA), saldo: toARS(saldoUVA) },
-        usd: { cap: toUSD(capitalUVAi), int: toUSD(interesUVA), iva: toUSD(ivaUVA), serv: toUSD(servUVA), saldo: toUSD(saldoUVA) }
+        uva: { cap: capitalUVAi, int: interesUVA, iva: ivaUVA, seg: segMensualUVA, total: totalUVA,                          saldo: saldoUVA },
+        ars: { cap: toARS(capitalUVAi), int: toARS(interesUVA), iva: toARS(ivaUVA), seg: segMensualARS, total: toARS(servUVA) + segMensualARS, saldo: toARS(saldoUVA) },
+        usd: { cap: toUSD(capitalUVAi), int: toUSD(interesUVA), iva: toUSD(ivaUVA), seg: segMensualUSD, total: toUSD(servUVA) + segMensualUSD, saldo: toUSD(saldoUVA) }
       });
     }
 
-    const anticipo = valorInmueble * pctAnticipo;
-    const gastos = valorInmueble * pctGastos;
-    const tea = (Math.pow(1 + tem, 12.1666666) - 1) * 100;
+    const anticipo       = valorInmueble * pctAnticipo;
+    const gastos         = valorInmueble * pctGastos;
+    const cuota1ARS      = rows[0].ars.total;
+    const ingresosMin    = cuota1ARS / relacionCuota;
+    const tea            = (Math.pow(1 + tem, 12.1666666) - 1) * 100;
 
     document.getElementById('metricsGrid').innerHTML = `
       <div class="metric">
@@ -431,8 +460,8 @@
       </div>
       <div class="metric">
         <div class="mlabel">1° cuota estimada</div>
-        <div class="mval">ARS ${fmt(rows[0].ars.serv, 0)}</div>
-        <div class="msub">USD ${fmt(rows[0].usd.serv, 2)} · ${fmt(rows[0].uva.serv, 1)} UVA</div>
+        <div class="mval">ARS ${fmt(cuota1ARS, 0)}</div>
+        <div class="msub">USD ${fmt(rows[0].usd.total, 2)} · ${fmt(rows[0].uva.total, 1)} UVA</div>
       </div>
       <div class="metric">
         <div class="mlabel">Anticipo + gastos</div>
@@ -445,9 +474,9 @@
         <div class="msub">TEA ≈ ${tea.toFixed(2)}%</div>
       </div>
       <div class="metric">
-        <div class="mlabel">Plazo</div>
-        <div class="mval">${plazo} meses</div>
-        <div class="msub">${(plazo / 12).toFixed(1)} años</div>
+        <div class="mlabel">Seg. incendio mensual</div>
+        <div class="mval">USD ${fmt(segMensualUSD, 2)}</div>
+        <div class="msub">ARS ${fmt(segMensualARS, 0)} · ${fmt(segMensualUVA, 2)} UVA</div>
       </div>
       <div class="metric">
         <div class="mlabel">IVA s/ intereses</div>
@@ -455,6 +484,11 @@
           <span class="badge ${primeraVivienda === 'SI' ? 'badge-green' : 'badge-orange'}">${primeraVivienda === 'SI' ? '1° vivienda' : 'Grava IVA'}</span>
         </div>
         <div class="msub">CVS: ${ajusteCVS === 'SI' ? 'Sí (+1.5%/mes)' : 'No aplica'}</div>
+      </div>
+      <div class="metric highlight">
+        <div class="mlabel">Ingresos netos mínimos</div>
+        <div class="mval">ARS ${fmt(ingresosMin, 0)}</div>
+        <div class="msub">Relación cuota/ingreso: ${(relacionCuota * 100).toFixed(0)}%</div>
       </div>
     `;
 
@@ -469,7 +503,8 @@
           <td>${prefix}${fmt(d.cap)}</td>
           <td>${prefix}${fmt(d.int)}</td>
           <td>${prefix}${fmt(d.iva)}</td>
-          <td>${prefix}${fmt(d.serv)}</td>
+          <td>${prefix}${fmt(d.seg)}</td>
+          <td class="total-col">${prefix}${fmt(d.total)}</td>
           <td>${prefix}${fmt(d.saldo, 0)}</td>
         `;
         body.appendChild(tr);
@@ -488,8 +523,9 @@
       data: {
         labels: sampled.map(r => 'M' + r.mes),
         datasets: [
-          { label: 'Capital (ARS)', data: sampled.map(r => Math.round(r.ars.cap)), backgroundColor: '#1a3a5c', stack: 'a' },
-          { label: 'Interés (ARS)', data: sampled.map(r => Math.round(r.ars.int)), backgroundColor: '#c44a20', stack: 'a' }
+          { label: 'Capital (ARS)',        data: sampled.map(r => Math.round(r.ars.cap)), backgroundColor: '#1a3a5c', stack: 'a' },
+          { label: 'Interés (ARS)',        data: sampled.map(r => Math.round(r.ars.int)), backgroundColor: '#c44a20', stack: 'a' },
+          { label: 'Seg. incendio (ARS)',  data: sampled.map(r => Math.round(r.ars.seg)), backgroundColor: '#0f6e56', stack: 'a' }
         ]
       },
       options: {
@@ -516,3 +552,4 @@
 </script>
 </body>
 </html>
+
