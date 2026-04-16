@@ -1,6 +1,6 @@
-# Calculadora Hipotecaria UVA
+# Calculadora Hipotecarios UVA
 
-Simulador de crédito hipotecario UVA desarrollado en HTML, CSS y JavaScript puro. Permite calcular el flujo de fondos completo en UVA, ARS y USD, con tabla de amortización y gráfico de composición de cuota.
+Simulador de crédito hipotecario UVA. Permite calcular el flujo de fondos completo en UVA, ARS y USD, con tabla de amortización y gráfico de composición de cuota.
 
 ## Demo
 
