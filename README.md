@@ -4,7 +4,7 @@ Simulador de crédito hipotecario UVA. Permite calcular el flujo de fondos compl
 
 ## Demo
 
-Abrí el archivo `calculadora-uva-v3.html` directamente en tu navegador, o publicalo en cualquier servicio de hosting estático.
+Abrí el archivo `index.html` directamente en tu navegador, o publicalo en cualquier servicio de hosting estático.
 
 ## Funcionalidades
 
@@ -19,17 +19,17 @@ Abrí el archivo `calculadora-uva-v3.html` directamente en tu navegador, o publi
   - Plazo en meses
   - Valor UVA y tipo de cambio USD/ARS
   - Primera vivienda (exento o grava IVA 21%)
-  - Ajuste CVS (+1,5% mensual)
+  - Ajuste CVS (+1,5% anual)
   - Relación cuota/ingreso → calcula ingresos netos mínimos
-  - Seguro de incendio (% anual sobre valor del inmueble)
+  - Seguro de incendio
 
 ## Cómo usar
 
 1. Cloná el repositorio:
    ```bash
-   git clone https://github.com/tu-usuario/calculadora-uva.git
+   git clone https://github.com/gonzalob93/Hipotecarios-Uva.git
    ```
-2. Abrí `calculadora-uva-v3.html` en tu navegador. No requiere servidor ni dependencias adicionales.
+2. Abrí `index.html` en tu navegador. No requiere servidor ni dependencias adicionales.
 
 ## Publicación
 
@@ -49,6 +49,6 @@ Podés publicar la calculadora de forma gratuita en:
 
 Basado en una planilla Excel de elaboración propia, convertida a aplicación web interactiva.
 
-## Aviso
+## AVISO IMPORTANTE
 
 Los valores calculados son estimativos y no constituyen una oferta crediticia oficial.
