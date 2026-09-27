@@ -372,7 +372,7 @@
         <table>
           <thead><tr>
             <th>Mes</th><th>Cuota capital</th><th>Cuota interés</th>
-            <th>IVA s/interés</th><th>Seg. incendio</th><th>Cuota total</th><th>Saldo deuda</th>
+            <th>IVA s/interés</th><th>Cuota total</th><th>Saldo deuda</th>
           </tr></thead>
           <tbody id="bodyUVA"></tbody>
         </table>
@@ -511,8 +511,8 @@
       </div>
       <div class="metric">
         <div class="mlabel">1° cuota estimada</div>
-        <div class="mval">ARS ${fmt(cuota1ARS, 0)}</div>
-        <div class="msub">USD ${fmt(rows[0].usd.total, 2)} · ${fmt(rows[0].uva.total, 1)} UVA</div>
+        <div class="mval">ARS ${fmt(rows[0].ars.total - rows[0].ars.seg, 0)}</div>
+        <div class="msub">USD ${fmt(rows[0].usd.total - rows[0].usd.seg, 2)} · ${fmt(rows[0].uva.total - rows[0].uva.seg, 2)} UVA</div>
       </div>
       <div class="metric">
         <div class="mlabel">Anticipo + gastos</div>
@@ -543,7 +543,7 @@
       </div>
     `;
 
-    const fillTable = (bodyId, key, prefix) => {
+    const fillTable = (bodyId, key, prefix, mostrarSeguro = true) => {
       const body = document.getElementById(bodyId);
       body.innerHTML = '';
       rows.forEach(r => {
@@ -554,15 +554,15 @@
           <td>${prefix}${fmt(d.cap)}</td>
           <td>${prefix}${fmt(d.int)}</td>
           <td>${prefix}${fmt(d.iva)}</td>
-          <td>${prefix}${fmt(d.seg)}</td>
-          <td class="total-col">${prefix}${fmt(d.total)}</td>
+          ${mostrarSeguro ? `<td>${prefix}${fmt(d.seg)}</td>` : ''}
+          <td class="total-col">${prefix}${fmt(mostrarSeguro ? d.total : d.total - d.seg)}</td>
           <td>${prefix}${fmt(d.saldo, 0)}</td>
         `;
         body.appendChild(tr);
       });
     };
 
-    fillTable('bodyUVA', 'uva', '');
+    fillTable('bodyUVA', 'uva', '', false); // UVA: sin columna de seguro (solo visual)
     fillTable('bodyARS', 'ars', '');
     fillTable('bodyUSD', 'usd', 'U$D ');
 
