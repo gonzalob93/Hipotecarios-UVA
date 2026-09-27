@@ -263,6 +263,8 @@
 
   .print-disclaimer { display: none; }
   .print-section-title { display: none; }
+
+  @media (max-width: 640px) {
     .grid-2, .grid-3 { grid-template-columns: 1fr; }
     .metrics { grid-template-columns: 1fr 1fr; }
     header h1 { font-size: 21px; }
@@ -342,7 +344,7 @@
         <input type="number" id="relacionCuota" value="25" min="1" max="100" step="1">
       </div>
       <div class="field">
-        <label>Seguro de incendio (% anual sobre valor inmueble)</label>
+        <label>Seguro de incendio (% mensual sobre valor inmueble)</label>
         <input type="number" id="seguroIncendio" value="0.012" min="0" step="0.0001">
       </div>
     </div>
@@ -427,7 +429,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
   let primeraVivienda = 'SI';
-  let ajusteCVS = 'SI';
+  let ajusteCVS = 'NO'; // debe coincidir con el botón activo por defecto ("No aplica")
   let chartInst = null;
 
   function setVivienda(v) {
@@ -456,14 +458,16 @@
     const relacionCuota  = parseFloat(document.getElementById('relacionCuota').value) / 100;
     const pctSeguro      = parseFloat(document.getElementById('seguroIncendio').value) / 100;
 
+    // Convención bancaria (sistema francés, cuota mensual): TEM = TNA / 12.
+    // Verificado contra el simulador de Santander: TNA 7,5% → TEM 0,625% → TEA 7,76%.
+    // CVS: spread de 1,5 p.p. anuales que se suma a la TNA.
     const CVS = 0.015;
-    const tem = ajusteCVS === 'SI'
-      ? (tnaInput / 12.1666667) + (CVS / 12.166667)
-      : tnaInput / 12.1666667;
+    const tnaEfectiva = ajusteCVS === 'SI' ? tnaInput + CVS : tnaInput;
+    const tem = tnaEfectiva / 12;
 
     const hipotecaUSD = valorInmueble * (1 - pctAnticipo);
     const hipotecaARS = hipotecaUSD * usdArs;
-    const capitalUVA  = Math.ceil(hipotecaARS / valorUVA);
+    const capitalUVA  = hipotecaARS / valorUVA; // sin redondeo, como el banco (25.374,82 UVA)
     const cuotaPuraUVA = capitalUVA / ((1 - Math.pow(1 + tem, -plazo)) / tem);
 
     // Seguro de incendio mensual fijo sobre valor del inmueble
@@ -475,7 +479,7 @@
     let saldoUVA = capitalUVA;
 
     for (let i = 1; i <= plazo; i++) {
-      const interesUVA  = saldoUVA * tnaInput / 12.1666667;
+      const interesUVA  = saldoUVA * tem; // misma tasa que la cuota (antes ignoraba el CVS)
       const capitalUVAi = cuotaPuraUVA - interesUVA;
       const ivaUVA      = primeraVivienda === 'NO' ? interesUVA * 0.21 : 0;
       const servUVA     = cuotaPuraUVA + ivaUVA;
@@ -497,13 +501,13 @@
     const gastos         = valorInmueble * pctGastos;
     const cuota1ARS      = rows[0].ars.total;
     const ingresosMin    = cuota1ARS / relacionCuota;
-    const tea            = (Math.pow(1 + tem, 12.1666666) - 1) * 100;
+    const tea            = (Math.pow(1 + tem, 12) - 1) * 100;
 
     document.getElementById('metricsGrid').innerHTML = `
       <div class="metric">
         <div class="mlabel">Capital hipoteca</div>
         <div class="mval">USD ${fmt(hipotecaUSD, 0)}</div>
-        <div class="msub">${fmt(capitalUVA, 0)} UVA · ARS ${fmt(hipotecaARS, 0)}</div>
+        <div class="msub">${fmt(capitalUVA, 2)} UVA · ARS ${fmt(hipotecaARS, 0)}</div>
       </div>
       <div class="metric">
         <div class="mlabel">1° cuota estimada</div>
